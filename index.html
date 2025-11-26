@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rowena Prototype Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2dd4bf; /* Teal */
+            --danger: #ef4444;  /* Red */
+            --bg: #0f172a;      /* Deep Blue */
+            --card: #1e293b;    /* Card BG */
+            --text: #f1f5f9;
+        }
+
+        body {
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Urbanist', sans-serif;
+            color: var(--text);
+        }
+
+        /* Phone Container */
+        .phone-frame {
+            width: 375px;
+            height: 800px;
+            background-color: var(--bg);
+            border-radius: 40px;
+            border: 8px solid #333;
+            box-shadow: 0 0 50px rgba(45, 212, 191, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .status-bar {
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        /* Rowena Stage */
+        .pet-stage {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(circle at center, rgba(45, 212, 191, 0.1) 0%, transparent 70%);
+            transition: background 0.3s;
+        }
+
+        /* The Image of Rowena */
+        .rowena-avatar {
+            width: 280px;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+            z-index: 2;
+        }
+
+        /* Speech Bubble */
+        .speech-bubble {
+            background: white;
+            color: #0f172a;
+            padding: 15px 20px;
+            border-radius: 20px;
+            border-bottom-left-radius: 0;
+            margin-bottom: 20px;
+            font-weight: 600;
+            max-width: 80%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            position: absolute;
+            top: 40px;
+            z-index: 3;
+        }
+
+        .speech-bubble.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Stats (Gamification) */
+        .stats-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            z-index: 2;
+        }
+
+        .stat-pill {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        /* Interaction Area */
+        .interaction-area {
+            background: var(--card);
+            padding: 20px;
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Chat Simulation */
+        .chat-simulation {
+            margin-bottom: 20px;
+        }
+        
+        .chat-input-wrapper {
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            padding-right: 50px;
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        /* Action Buttons */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-scan {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            grid-column: span 2;
+        }
+
+        .btn-report {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .btn-feed {
+            background: rgba(45, 212, 191, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        /* Animations */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-5deg); }
+            75% { transform: translateX(5px) rotate(5deg); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes pulse-red {
+            0% { background: radial-gradient(circle at center, rgba(239, 68, 68, 0.0) 0%, transparent 70%); }
+            50% { background: radial-gradient(circle at center, rgba(239, 68, 68, 0.4) 0%, transparent 70%); }
+            100% { background: radial-gradient(circle at center, rgba(239, 68, 68, 0.0) 0%, transparent 70%); }
+        }
+
+        /* States */
+        .state-happy .rowena-avatar {
+            animation: bounce 0.6s ease infinite;
+        }
+
+        .state-danger .rowena-avatar {
+            animation: shake 0.4s ease infinite;
+        }
+        
+        .state-danger.pet-stage {
+            animation: pulse-red 1s infinite;
+        }
+
+        /* Floating particles for feeding */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            font-size: 24px;
+            z-index: 10;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <span><i class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span>
+        </div>
+
+        <!-- Rowena's Room -->
+        <div class="pet-stage" id="petStage">
+            <div class="speech-bubble" id="speechBubble">
+                Hi! I'm Rowena. I'm guarding your keyboard! 🛡️
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-pill">
+                    <i class="fas fa-heart" style="color: #ef4444;"></i> <span id="healthVal">85%</span>
+                </div>
+                <div class="stat-pill">
+                    <i class="fas fa-shield-alt" style="color: #3b82f6;"></i> Safe
+                </div>
+            </div>
+
+            <!-- UPDATE: Filename changed to Rowenaapp2.jpg -->
+            <img src="Rowenaapp2.png" alt="Rowena" class="rowena-avatar" id="rowenaImg">
+        </div>
+
+        <!-- Controls -->
+        <div class="interaction-area">
+            
+            <!-- Simulated Keyboard Input -->
+            <div class="chat-simulation">
+                <p style="margin: 0 0 10px 0; font-size: 12px; color: #94a3b8;">TRY TYPING: "password", "bank", or "transfer"</p>
+                <div class="chat-input-wrapper">
+                    <input type="text" class="chat-input" id="keyboardInput" placeholder="Type a message...">
+                    <i class="fas fa-paper-plane input-icon"></i>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions-grid">
+                <button class="btn btn-scan" onclick="runScan()">
+                    <i class="fas fa-radar"></i> System Scan
+                </button>
+                <button class="btn btn-report" onclick="reportScam()">
+                    <i class="fas fa-exclamation-circle"></i> Report Scam
+                </button>
+                <button class="btn btn-feed" onclick="feedRowena()">
+                    <i class="fas fa-cookie-bite"></i> Feed
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rowenaImg = document.getElementById('rowenaImg');
+        const petStage = document.getElementById('petStage');
+        const speechBubble = document.getElementById('speechBubble');
+        const inputField = document.getElementById('keyboardInput');
+        const healthDisplay = document.getElementById('healthVal');
+        
+        let health = 85;
+
+        // 1. Text Analysis (The Keyboard Guardian Feature)
+        inputField.addEventListener('input', (e) => {
+            const text = e.target.value.toLowerCase();
+            const dangerWords = ['password', 'bank', 'transfer', 'credit card', 'money', '密碼', '銀行', '轉帳'];
+            
+            // Check if any danger word is in the input
+            const isDanger = dangerWords.some(word => text.includes(word));
+
+            if (isDanger) {
+                setMood('danger', "Wait! 🛑 Don't share sensitive info here!");
+            } else if (text.length > 0) {
+                setMood('normal', "I'm watching your back. 👀");
+            } else {
+                setMood('normal', "Ready to chat safely? 💬");
+            }
+        });
+
+        // 2. Report Scam (Feeding Logic)
+        function reportScam() {
+            setMood('happy', "Yum! 🍪 Thanks for reporting that scam!");
+            spawnParticles('🍪');
+            health = Math.min(100, health + 10);
+            updateHealth();
+            
+            // Reset to normal after 2 seconds
+            setTimeout(() => {
+                setMood('normal', "Feeling stronger! 💪");
+            }, 2500);
+        }
+
+        // 3. Feeding (Direct)
+        function feedRowena() {
+            setMood('happy', "Delicious! Keep the internet safe! ❤️");
+            spawnParticles('❤️');
+            health = Math.min(100, health + 5);
+            updateHealth();
+            setTimeout(() => {
+                setMood('normal', "I'm full!");
+            }, 2000);
+        }
+
+        // 4. System Scan
+        function runScan() {
+            speechBubble.classList.add('show');
+            speechBubble.innerText = "Scanning system... 🔍";
+            
+            // Simulate processing
+            setTimeout(() => {
+                speechBubble.innerText = "Checking apps... 📂";
+            }, 1000);
+
+            setTimeout(() => {
+                setMood('happy', "All Clear! System is safe. ✅");
+                spawnParticles('✨');
+            }, 2500);
+        }
+
+        // Helper: Set Mood/Animation
+        function setMood(mood, text) {
+            // Update Text
+            speechBubble.innerText = text;
+            speechBubble.classList.add('show');
+
+            // Reset Classes
+            petStage.classList.remove('state-danger', 'state-happy');
+            
+            if (mood === 'danger') {
+                petStage.classList.add('state-danger');
+            } else if (mood === 'happy') {
+                petStage.classList.add('state-happy');
+            }
+        }
+
+        // Helper: Update Health UI
+        function updateHealth() {
+            healthDisplay.innerText = health + "%";
+        }
+
+        // Helper: Particles Effect
+        function spawnParticles(emoji) {
+            for(let i=0; i<5; i++) {
+                const p = document.createElement('div');
+                p.classList.add('particle');
+                p.innerText = emoji;
+                p.style.left = (50 + (Math.random() * 40 - 20)) + '%';
+                p.style.top = '50%';
+                petStage.appendChild(p);
+                
+                // Remove after animation
+                setTimeout(() => p.remove(), 1000);
+            }
+        }
+
+        // Initial Greeting
+        setTimeout(() => {
+            speechBubble.classList.add('show');
+        }, 500);
+
+    </script>
+</body>
+</html>
